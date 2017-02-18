@@ -11,6 +11,7 @@ package shuhelper.web;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.jsoup.nodes.Document;
@@ -189,5 +190,60 @@ public class XKWebAPI extends WebAPI {
 			arrayList.add(info);
 		}
 		return arrayList;
+	}
+	
+	public String getEnrollStatus() throws Exception {
+		// 访问选课页面
+		String url = urlLogin + Utils.getProperty("XK_urlEnrollStatusSuffix");
+		Document doc = Utils.getDocument(httpClient, url);
+			
+		// 获取选课状态
+		Elements info = doc.select("center td");
+		if (info.isEmpty()) {
+			return "OK";
+		} else {
+			return info.last().html();
+		}
+	}
+	
+	private String doEnrollOrReturnCourse(String propertyKey, List<NameValuePair> data)
+			throws Exception {
+		// 选课/退课
+		String url = this.urlLogin + Utils.getProperty(propertyKey);
+		Document doc = Utils.postDocument(httpClient, url, data);
+		Elements rows = doc.select("table.tbllist td");
+		if (rows.isEmpty()) return "无法选课/退课";
+		
+		// 结果
+		String res = rows.first().html();
+		if (res.contains("成功")) {
+			return "OK";
+		} else if (res.contains("失败")) {
+			return rows.last().html();
+		} else {
+			return "未知错误";
+		}
+	}
+	
+	public String enrollCourse(String courseNo, String teacherNo) throws Exception {
+		// 设置选课参数
+		List<NameValuePair> data = new ArrayList<NameValuePair>();
+		data.add(new BasicNameValuePair("ListCourseStr", courseNo + "|" + teacherNo + "|0|"));
+		data.add(new BasicNameValuePair("stuNo", this.strUserNo));
+		data.add(new BasicNameValuePair("IgnorClassMark", "false"));
+		data.add(new BasicNameValuePair("IgnorCourseGroup", "false"));
+		data.add(new BasicNameValuePair("IgnorCredit", "false"));
+		
+		return doEnrollOrReturnCourse("XK_urlEnrollCourseSuffix", data);
+	}
+	
+	public String returnCourse(String courseNo, String teacherNo)  throws Exception {
+		// 设置退课参数
+		List<NameValuePair> data = new ArrayList<NameValuePair>();
+		data.add(new BasicNameValuePair("ListCourseStr", courseNo + "|" + teacherNo));
+		data.add(new BasicNameValuePair("StuNo", this.strUserNo));
+		data.add(new BasicNameValuePair("Absolute", "false"));
+		
+		return doEnrollOrReturnCourse("XK_urlReturnCourseSuffix", data);	
 	}
 }

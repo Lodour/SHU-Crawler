@@ -81,7 +81,16 @@ public class Tutorial {
 		
 		// 查询所有"0830"课程
 		ArrayList<String[]> queryCourse = XK.getAllCourseArray("0830");
-		output(queryCourse, "0830课程");		
+		output(queryCourse, "0830课程");	
+
+		// 查询选课系统状态
+		System.out.println("选课状态: " + XK.getEnrollStatus());
+		
+		// 选课
+		System.out.println("选课结果: " + XK.enrollCourse("08305013", "1001"));
+		
+		// 退课
+		System.out.println("退课结果: " + XK.returnCourse("08305013", "1001"));
 	}
 	
 	private static void output(ArrayList<String[]> arrayList, String title) {
